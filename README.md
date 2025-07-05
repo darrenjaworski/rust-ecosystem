@@ -1,6 +1,6 @@
 # Rust Ecosystem-in-a-Bottle Simulation Game
 
-This project is a Rust CLI simulation game that models a closed ecosystem in a bottle. The goal is to balance the system so that most simulated ecosystems collapse around 20 days, with rare long-lived "miracle" runs. The game features a Monte Carlo simulation mode for statistical analysis and a user-friendly CLI with colored output and ASCII graphs.
+This project is a Rust CLI simulation game that models a closed ecosystem in a bottle. The goal is to prevent your ecosystem from collapsing before 30 days have elapsed.
 
 ## Features
 
@@ -47,7 +47,7 @@ This project is a Rust CLI simulation game that models a closed ecosystem in a b
 
 ## Balancing Philosophy
 
-The simulation is tuned so that most runs collapse around 20 days, but rare "miracle" runs can survive indefinitely. The Monte Carlo mode helps analyze and fine-tune this balance.
+The game difficulty is balanced so that most simulations collapse around day 20. Can you survive to day 30?
 
 ## License
 
