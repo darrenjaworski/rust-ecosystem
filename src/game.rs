@@ -11,6 +11,7 @@ Ecosystem setup complete.");
     print_state(&state);
 
     let mut day_number = 1;
+    let mut prev_state = state.clone();
     loop {
         // Day Cycle (10 intervals)
         for _ in 1..=10 {
@@ -24,7 +25,9 @@ Ecosystem setup complete.");
 
         println!("\n--- End of Day {} ---", day_number);
         print_state(&state);
-        print_graphs(&state);
+        println!("  Window proximity (distance from window): {}", config.window_proximity);
+        print_graphs(&state, Some(&prev_state));
+        prev_state = state.clone();
 
         // Check for win/loss conditions
         if state.plant_size <= 0.0 {
@@ -46,11 +49,11 @@ Congratulations! You have maintained a balanced ecosystem for 30 days!");
         let mut should_exit = false;
         loop {
             let action = get_user_input(
-                "\nChoose an action for the next day:\n2. Move closer to window\n3. Move further from window\n4. Open the bottle and intervene\n(Press Enter to do nothing)\nEnter 'exit' to quit.",
+                "\nChoose an action for the next day:\n1. Move closer to window\n2. Move further from window\n3. Open the bottle and intervene\nType 'exit' to quit.\n(Press Enter to do nothing)",
             );
 
             match action.trim() {
-                "2" => {
+                "1" => {
                     if config.window_proximity > 1 {
                         config.window_proximity -= 1;
                         println!("You moved the bottle closer to the window. Proximity: {}", config.window_proximity);
@@ -59,7 +62,7 @@ Congratulations! You have maintained a balanced ecosystem for 30 days!");
                     }
                     break;
                 }
-                "3" => {
+                "2" => {
                     if config.window_proximity < 5 {
                         config.window_proximity += 1;
                         println!("You moved the bottle further from the window. Proximity: {}", config.window_proximity);
@@ -68,7 +71,7 @@ Congratulations! You have maintained a balanced ecosystem for 30 days!");
                     }
                     break;
                 }
-                "4" => {
+                "3" => {
                     // Open the bottle: reset oxygen, allow add plant or water
                     state.oxygen = 21.0;
                     println!("You opened the bottle. Oxygen reset to 21.0%.");
@@ -108,7 +111,7 @@ Congratulations! You have maintained a balanced ecosystem for 30 days!");
                     break;
                 }
                 _ => {
-                    println!("Invalid choice. Please enter 2, 3, 4, press Enter, or type 'exit'.");
+                    println!("Invalid choice. Please enter 1, 2, 3, press Enter, or type 'exit'.");
                 }
             }
         }

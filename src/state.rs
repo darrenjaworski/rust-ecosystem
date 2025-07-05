@@ -1,6 +1,6 @@
 use colored::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct EcosystemState {
     pub ph: f32,
     pub temperature: f32,
@@ -53,19 +53,28 @@ pub fn print_state(state: &EcosystemState) {
     );
 }
 
-fn print_bar(label: &str, value: f32, max_value: f32, color: Color) {
+pub fn print_graphs(state: &EcosystemState, prev: Option<&EcosystemState>) {
+    println!("--- Visual Indicators ---");
+    print_bar_with_diff("Temperature", state.temperature, 45.0, Color::Yellow, prev.map(|p| p.temperature));
+    print_bar_with_diff("Humidity", state.humidity, 100.0, Color::Green, prev.map(|p| p.humidity));
+    print_bar_with_diff("Plant Size", state.plant_size, 100.0, Color::Green, prev.map(|p| p.plant_size));
+    print_bar_with_diff("Oxygen", state.oxygen, 30.0, Color::Green, prev.map(|p| p.oxygen));
+    println!();
+}
+
+fn print_bar_with_diff(label: &str, value: f32, max_value: f32, color: Color, prev: Option<f32>) {
     let bar_width = 20;
     let filled_width = ((value / max_value) * bar_width as f32).round() as usize;
     let bar = "█".repeat(filled_width) + &"-".repeat(bar_width - filled_width);
-    println!("  {:16} [{}]", label, bar.color(color));
-}
-
-pub fn print_graphs(state: &EcosystemState) {
-    println!(
-"--- Visual Indicators ---");
-    print_bar("Temperature", state.temperature, 45.0, Color::Yellow);
-    print_bar("Humidity", state.humidity, 100.0, Color::Green);
-    print_bar("Plant Size", state.plant_size, 100.0, Color::Green);
-    print_bar("Oxygen", state.oxygen, 30.0, Color::Green);
-    println!();
+    let diff_str = if let Some(prev_val) = prev {
+        if prev_val != 0.0 {
+            let percent = ((value - prev_val) / prev_val) * 100.0;
+            format!(" ({:+.1}%)", percent)
+        } else {
+            String::from("")
+        }
+    } else {
+        String::from("")
+    };
+    println!("  {:16} [{}]{}", label, bar.color(color), diff_str);
 }
