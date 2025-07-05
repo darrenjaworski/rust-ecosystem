@@ -1,12 +1,12 @@
 use crate::input::get_user_input;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SoilType {
     Porous,
     NonPorous,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GameConfig {
     pub soil_type: SoilType,
     pub num_plants: u32,

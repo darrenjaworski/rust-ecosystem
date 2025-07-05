@@ -5,10 +5,22 @@ use crate::simulation::update_ecosystem;
 use std::collections::BTreeMap;
 
 pub fn run_montecarlo_simulations(num_runs: usize, day_cap: usize) {
+    let num_runs = num_runs.min(100_000); // limit to 100,000
+    let day_cap = day_cap.min(1000); // limit to 1,000
     let mut survived = 0;
     let mut total_days = 0;
     let mut histogram: BTreeMap<usize, usize> = BTreeMap::new();
-    for _ in 0..num_runs {
+    // Track configs of successful runs
+    use std::collections::HashMap;
+    let mut survivors: Vec<GameConfig> = Vec::new();
+    for i in 0..num_runs {
+        // Show progress bar
+        if num_runs >= 20 && i % (num_runs / 100).max(1) == 0 {
+            let percent = (i * 100) / num_runs;
+            print!("\rProgress: [{:3}%] {}/{} runs", percent, i, num_runs);
+            use std::io::Write;
+            std::io::stdout().flush().unwrap();
+        }
         let mut rng = rand::thread_rng();
         let soil_type = if rng.gen_bool(0.5) { SoilType::Porous } else { SoilType::NonPorous };
         let num_plants = rng.gen_range(2..=5);
@@ -32,12 +44,17 @@ pub fn run_montecarlo_simulations(num_runs: usize, day_cap: usize) {
             }
             if day_number >= day_cap {
                 survived += 1;
+                survivors.push(config.clone());
                 break;
             }
             day_number += 1;
         }
         total_days += day_number;
         *histogram.entry(day_number).or_insert(0) += 1;
+    }
+    // Clear progress bar and print newline
+    if num_runs >= 20 {
+        println!("\rProgress: [100%] {}/{} runs", num_runs, num_runs);
     }
     println!("Monte Carlo Results ({} runs, {} day cap):", num_runs, day_cap);
     println!("  Survived {} days: {} times ({:.1}%)", day_cap, survived, (survived as f64 / num_runs as f64) * 100.0);
@@ -46,5 +63,38 @@ pub fn run_montecarlo_simulations(num_runs: usize, day_cap: usize) {
     for (days, count) in &histogram {
         let bar = "#".repeat((*count * 50 / num_runs).max(1));
         println!("  {:>3} days: {:>4} | {}", days, count, bar);
+    }
+    // Analyze survivors
+    if survived > 0 {
+        let mut soil_type_count = [0; 2];
+        let mut num_plants_count = HashMap::new();
+        let mut soil_kg_count = HashMap::new();
+        let mut window_proximity_count = HashMap::new();
+        let mut water_liters_count = HashMap::new();
+        for config in &survivors {
+            match config.soil_type {
+                SoilType::Porous => soil_type_count[0] += 1,
+                SoilType::NonPorous => soil_type_count[1] += 1,
+            }
+            *num_plants_count.entry(config.num_plants).or_insert(0) += 1;
+            *soil_kg_count.entry(config.soil_kg).or_insert(0) += 1;
+            *window_proximity_count.entry(config.window_proximity).or_insert(0) += 1;
+            *water_liters_count.entry(config.water_liters).or_insert(0) += 1;
+        }
+        println!("\nMost common variables among survivors:");
+        println!("  Soil type: Porous {} / NonPorous {}", soil_type_count[0], soil_type_count[1]);
+        let top = |map: &HashMap<_,_>| map.iter().max_by_key(|e| e.1).map(|(k,v)| (*k,*v));
+        if let Some((val, count)) = top(&num_plants_count) {
+            println!("  Most common num_plants: {} ({} survivors)", val, count);
+        }
+        if let Some((val, count)) = top(&soil_kg_count) {
+            println!("  Most common soil_kg: {} ({} survivors)", val, count);
+        }
+        if let Some((val, count)) = top(&window_proximity_count) {
+            println!("  Most common window_proximity: {} ({} survivors)", val, count);
+        }
+        if let Some((val, count)) = top(&water_liters_count) {
+            println!("  Most common water_liters: {} ({} survivors)", val, count);
+        }
     }
 }
