@@ -62,10 +62,25 @@ pub fn print_graphs(state: &EcosystemState, prev: Option<&EcosystemState>) {
     println!();
 }
 
-fn print_bar_with_diff(label: &str, value: f32, max_value: f32, color: Color, prev: Option<f32>) {
+fn print_bar_with_diff(label: &str, value: f32, max_value: f32, _color: Color, prev: Option<f32>) {
     let bar_width = 20;
     let filled_width = ((value / max_value) * bar_width as f32).round() as usize;
-    let bar = "█".repeat(filled_width) + &"-".repeat(bar_width - filled_width);
+    // Determine color based on stat and value
+    let (good, warn) = match label {
+        "Temperature" => ((18.0, 28.0), (15.0, 35.0)),
+        "Humidity" => ((40.0, 70.0), (30.0, 85.0)),
+        "Plant Size" => ((10.0, 80.0), (5.0, 95.0)),
+        "Oxygen" => ((18.0, 25.0), (10.0, 30.0)),
+        _ => ((0.0, max_value), (0.0, max_value)),
+    };
+    let color = if value >= good.0 && value <= good.1 {
+        Color::Green
+    } else if value >= warn.0 && value <= warn.1 {
+        Color::Yellow
+    } else {
+        Color::Red
+    };
+    let bar = "█".repeat(filled_width).color(color).to_string() + &"-".repeat(bar_width - filled_width);
     let diff_str = if let Some(prev_val) = prev {
         if prev_val != 0.0 {
             let percent = ((value - prev_val) / prev_val) * 100.0;
@@ -76,5 +91,5 @@ fn print_bar_with_diff(label: &str, value: f32, max_value: f32, color: Color, pr
     } else {
         String::from("")
     };
-    println!("  {:16} [{}]{}", label, bar.color(color), diff_str);
+    println!("  {:16} [{}]{}", label, bar, diff_str);
 }
