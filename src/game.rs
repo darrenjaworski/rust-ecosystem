@@ -49,7 +49,7 @@ Congratulations! You have maintained a balanced ecosystem for 30 days!");
         let mut should_exit = false;
         loop {
             let action = get_user_input(
-                "\nChoose an action for the next day:\n1. Move closer to window\n2. Move further from window\n3. Open the bottle and intervene\nType 'exit' to quit.\n(Press Enter to do nothing)",
+                "\nChoose an action for the next day:\n1. Move closer to window\n2. Move further from window\n3. Open the bottle and intervene\nType 'exit' to quit.\n(Press Enter to do nothing and continue)",
             );
 
             match action.trim() {
