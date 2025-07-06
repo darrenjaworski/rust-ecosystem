@@ -1,6 +1,7 @@
 // v2/config.rs
 // Configuration and parameters for v2 ecosystem simulation
 
+#[allow(dead_code)]
 pub struct V2Config {
     pub num_microbes: usize,
     pub num_worms: usize,

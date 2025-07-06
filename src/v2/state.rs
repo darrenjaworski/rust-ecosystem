@@ -22,6 +22,7 @@ pub struct EcosystemStateV2 {
 }
 
 impl EcosystemStateV2 {
+    #[allow(dead_code)]
     pub fn new(config: &crate::v2::config::V2Config) -> Self {
         Self {
             plant_biomass: 1.0,
@@ -40,6 +41,30 @@ impl EcosystemStateV2 {
             air_co2: 0.04,
             temperature: config.initial_temp,
             humidity: config.initial_humidity,
+            rocks: config.rocks,
+        }
+    }
+    pub fn new_with_seed(config: &crate::v2::config::V2Config, seed: u64) -> Self {
+        use rand::{Rng, SeedableRng};
+        use rand::rngs::StdRng;
+        let mut rng = StdRng::seed_from_u64(seed);
+        Self {
+            plant_biomass: 1.0,
+            microbe_pop: rng.gen_range(500.0..=2000.0),
+            worm_pop: rng.gen_range(1.0..=10.0),
+            shrimp_pop: rng.gen_range(1.0..=5.0),
+            soil_nitrogen: rng.gen_range(0.5..=2.0),
+            soil_ph: rng.gen_range(5.5..=8.5),
+            soil_moisture: rng.gen_range(0.2..=config.water_liters),
+            soil_aeration: rng.gen_range(0.5..=2.0),
+            detritus: rng.gen_range(0.1..=2.0),
+            water_liters: config.water_liters,
+            water_o2: rng.gen_range(6.0..=10.0),
+            air_n2: 78.0,
+            air_o2: 21.0,
+            air_co2: 0.04,
+            temperature: rng.gen_range(18.0..=28.0),
+            humidity: rng.gen_range(40.0..=80.0),
             rocks: config.rocks,
         }
     }

@@ -1,10 +1,25 @@
+mod v2;
+
 use rand::Rng;
 use crate::v1::config::{GameConfig, SoilType};
 use crate::v1::state::EcosystemState;
 use crate::v1::simulation::update_ecosystem;
+use crate::v2::montecarlo::run_v2_montecarlo;
 use std::collections::BTreeMap;
 
-pub fn run_montecarlo_simulations(num_runs: usize, day_cap: usize) {
+pub enum MonteCarloModel {
+    V1,
+    V2,
+}
+
+pub fn run_montecarlo_simulations(num_runs: usize, day_cap: usize, model: MonteCarloModel) {
+    match model {
+        MonteCarloModel::V1 => run_v1_montecarlo(num_runs, day_cap),
+        MonteCarloModel::V2 => run_v2_montecarlo(num_runs, day_cap, 0.5),
+    }
+}
+
+fn run_v1_montecarlo(num_runs: usize, day_cap: usize) {
     let num_runs = num_runs.min(100_000); // limit to 100,000
     let day_cap = day_cap.min(1000); // limit to 1,000
     let mut survived = 0;
