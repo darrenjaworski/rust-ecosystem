@@ -1,7 +1,7 @@
 use rand::Rng;
-use crate::config::{GameConfig, SoilType};
-use crate::state::EcosystemState;
-use crate::simulation::update_ecosystem;
+use crate::v1::config::{GameConfig, SoilType};
+use crate::v1::state::EcosystemState;
+use crate::v1::simulation::update_ecosystem;
 use std::collections::BTreeMap;
 
 pub fn run_montecarlo_simulations(num_runs: usize, day_cap: usize) {

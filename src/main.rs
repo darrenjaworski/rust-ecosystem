@@ -1,13 +1,15 @@
-mod config;
-mod state;
-mod simulation;
-mod game;
-mod input;
+mod v1 {
+    pub mod config;
+    pub mod state;
+    pub mod simulation;
+    pub mod game;
+    pub mod input;
+}
 mod montecarlo;
 
-use config::setup_game;
-use state::EcosystemState;
-use game::run_game;
+use v1::config::setup_game;
+use v1::state::EcosystemState;
+use v1::game::run_game;
 use montecarlo::run_montecarlo_simulations;
 
 fn main() {

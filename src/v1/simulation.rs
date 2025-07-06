@@ -1,5 +1,5 @@
-use crate::config::{GameConfig, SoilType};
-use crate::state::EcosystemState;
+use crate::v1::config::{GameConfig, SoilType};
+use crate::v1::state::EcosystemState;
 
 pub fn update_ecosystem(config: &GameConfig, state: &mut EcosystemState, is_day: bool) {
     use rand::Rng;

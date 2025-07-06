@@ -1,7 +1,7 @@
-use crate::config::{GameConfig};
-use crate::state::{EcosystemState, print_state, print_graphs};
-use crate::simulation::update_ecosystem;
-use crate::input::get_user_input;
+use crate::v1::config::{GameConfig};
+use crate::v1::state::{EcosystemState, print_state, print_graphs};
+use crate::v1::simulation::update_ecosystem;
+use crate::v1::input::get_user_input;
 
 pub fn run_game(mut config: GameConfig, mut state: EcosystemState) {
     println!("

@@ -1,4 +1,4 @@
-use crate::input::get_user_input;
+use crate::v1::input::get_user_input;
 
 #[derive(Debug, Clone)]
 pub enum SoilType {
