@@ -28,7 +28,7 @@ fn run_v1_montecarlo(num_runs: usize, day_cap: usize) {
     let mut survivors: Vec<GameConfig> = Vec::new();
     for i in 0..num_runs {
         // Show progress bar
-        if num_runs >= 20 && i % (num_runs / 100).max(1) == 0 {
+        if num_runs >= 20 {
             let percent = (i * 100) / num_runs;
             print!("\rProgress: [{:3}%] {}/{} runs", percent, i, num_runs);
             use std::io::Write;
@@ -122,7 +122,7 @@ fn run_v2_montecarlo(num_runs: usize, day_cap: usize) {
     let mut histogram: BTreeMap<usize, usize> = BTreeMap::new();
     for i in 0..num_runs {
         // Show progress bar
-        if num_runs >= 20 && i % (num_runs / 100).max(1) == 0 {
+        if num_runs >= 20{
             let percent = (i * 100) / num_runs;
             print!("\rProgress: [{:3}%] {}/{} runs", percent, i, num_runs);
             use std::io::Write;
