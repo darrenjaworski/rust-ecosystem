@@ -6,28 +6,28 @@ use crate::v2::state::EcosystemStateV2;
 
 pub fn update_ecosystem_v2(config: &V2Config, state: &mut EcosystemStateV2, is_day: bool, difficulty: f32) {
     // --- Further Tuned Parameters ---
-    let k_photo = 0.10 * (1.0 - 0.3 * difficulty); // harder = less photosynthesis
-    let k_resp = 0.002 * (1.0 + 0.7 * difficulty); // harder = more respiration
-    let alpha_photo = 1.5 * (1.0 - 0.2 * difficulty); // harder = less O2 per CO2
+    let k_photo = 0.10 * (1.0 - 0.7 * difficulty); // much less photosynthesis at high difficulty
+    let k_resp = 0.002 * (1.0 + 2.0 * difficulty); // much more respiration at high difficulty
+    let alpha_photo = 1.5 * (1.0 - 0.5 * difficulty); // less O2 per CO2 at high difficulty
     let alpha_resp = 1.0;
-    let k_grow = 0.03 * (1.0 - 0.3 * difficulty); // harder = less growth
-    let k_n_plant = 0.002 * (1.0 + 0.5 * difficulty); // harder = more N uptake
+    let k_grow = 0.03 * (1.0 - 0.7 * difficulty); // much less growth at high difficulty
+    let k_n_plant = 0.002 * (1.0 + 1.5 * difficulty); // much more N uptake at high difficulty
     let k_fix = 0.008;
-    let k_m_grow = 0.01 * (1.0 - 0.2 * difficulty);
-    let k_m_death = 0.005 * (1.0 + 0.5 * difficulty);
-    let k_m_resp = 0.001 * (1.0 + 0.7 * difficulty);
+    let k_m_grow = 0.01 * (1.0 - 0.5 * difficulty);
+    let k_m_death = 0.005 * (1.0 + 1.5 * difficulty);
+    let k_m_resp = 0.001 * (1.0 + 2.0 * difficulty);
     let alpha_m_resp = 1.0;
-    let k_worm_air = 0.01 * (1.0 - 0.2 * difficulty);
-    let k_worm_decomp = 0.01 * (1.0 - 0.2 * difficulty);
-    let k_w_grow = 0.01 * (1.0 - 0.2 * difficulty);
-    let k_w_death = 0.005 * (1.0 + 0.5 * difficulty);
-    let k_shrimp_det = 0.01 * (1.0 - 0.2 * difficulty);
+    let k_worm_air = 0.01 * (1.0 - 0.5 * difficulty);
+    let k_worm_decomp = 0.01 * (1.0 - 0.5 * difficulty);
+    let k_w_grow = 0.01 * (1.0 - 0.5 * difficulty);
+    let k_w_death = 0.005 * (1.0 + 1.5 * difficulty);
+    let k_shrimp_det = 0.01 * (1.0 - 0.5 * difficulty);
     let k_shrimp_waste = 0.005;
-    let k_s_grow = 0.01 * (1.0 - 0.2 * difficulty);
-    let k_s_death = 0.005 * (1.0 + 0.5 * difficulty);
-    let k_acid = 0.001 * (1.0 + 0.5 * difficulty);
-    let k_buffer_rock = 0.002 * (1.0 - 0.5 * difficulty);
-    let k_buffer_water = 0.001 * (1.0 - 0.5 * difficulty);
+    let k_s_grow = 0.01 * (1.0 - 0.5 * difficulty);
+    let k_s_death = 0.005 * (1.0 + 1.5 * difficulty);
+    let k_acid = 0.001 * (1.0 + 1.5 * difficulty);
+    let k_buffer_rock = 0.002 * (1.0 - 0.8 * difficulty);
+    let k_buffer_water = 0.001 * (1.0 - 0.8 * difficulty);
     // --- Helper functions ---
     let f_light = |l: f32| (l / 6.0).min(1.0);
     let f_hum = |h: f32| (h / 100.0).min(1.0);

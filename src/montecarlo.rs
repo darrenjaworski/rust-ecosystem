@@ -1,12 +1,10 @@
-mod v2;
-
 use rand::Rng;
 use crate::v1::config::{GameConfig, SoilType};
 use crate::v1::state::EcosystemState;
 use crate::v1::simulation::update_ecosystem;
-use crate::v2::montecarlo::run_v2_montecarlo;
 use std::collections::BTreeMap;
 
+#[allow(dead_code)]
 pub enum MonteCarloModel {
     V1,
     V2,
@@ -15,7 +13,7 @@ pub enum MonteCarloModel {
 pub fn run_montecarlo_simulations(num_runs: usize, day_cap: usize, model: MonteCarloModel) {
     match model {
         MonteCarloModel::V1 => run_v1_montecarlo(num_runs, day_cap),
-        MonteCarloModel::V2 => run_v2_montecarlo(num_runs, day_cap, 0.5),
+        MonteCarloModel::V2 => run_v2_montecarlo(num_runs, day_cap),
     }
 }
 
@@ -74,11 +72,7 @@ fn run_v1_montecarlo(num_runs: usize, day_cap: usize) {
     println!("Monte Carlo Results ({} runs, {} day cap):", num_runs, day_cap);
     println!("  Survived {} days: {} times ({:.1}%)", day_cap, survived, (survived as f64 / num_runs as f64) * 100.0);
     println!("  Average days survived: {:.2}", total_days as f64 / num_runs as f64);
-    println!("\nHistogram of days survived before collapse:");
-    for (days, count) in &histogram {
-        let bar = "#".repeat((*count * 50 / num_runs).max(1));
-        println!("  {:>3} days: {:>4} | {}", days, count, bar);
-    }
+    print_histogram(&histogram, num_runs, day_cap);
     // Analyze survivors
     if survived > 0 {
         let mut soil_type_count = [0; 2];
@@ -111,5 +105,76 @@ fn run_v1_montecarlo(num_runs: usize, day_cap: usize) {
         if let Some((val, count)) = top(&water_liters_count) {
             println!("  Most common water_liters: {} ({} survivors)", val, count);
         }
+    }
+}
+
+fn run_v2_montecarlo(num_runs: usize, day_cap: usize) {
+    let num_runs = num_runs.min(100_000); // limit to 100,000
+    let day_cap = day_cap.min(1000); // limit to 1,000
+    
+    use crate::v2::config::V2Config;
+    use crate::v2::state::EcosystemStateV2;
+    use crate::v2::simulation::{update_ecosystem_v2, is_ecosystem_collapsed};
+    let num_runs = num_runs.min(100_000);
+    let day_cap = day_cap.min(1000);
+    let mut survived = 0;
+    let mut total_days = 0;
+    let mut histogram: BTreeMap<usize, usize> = BTreeMap::new();
+    for i in 0..num_runs {
+        // Show progress bar
+        if num_runs >= 20 && i % (num_runs / 100).max(1) == 0 {
+            let percent = (i * 100) / num_runs;
+            print!("\rProgress: [{:3}%] {}/{} runs", percent, i, num_runs);
+            use std::io::Write;
+            std::io::stdout().flush().unwrap();
+        }
+
+        let mut rng = rand::thread_rng();
+        let mut config = V2Config::default();
+        config.window_proximity = rng.gen_range(1..=6);
+        config.water_liters = rng.gen_range(1..=10) as f32;
+        config.rocks = rng.gen_range(0..=5);
+        config.num_microbes = rng.gen_range(500..=2000);
+        config.num_worms = rng.gen_range(1..=10);
+        config.num_shrimp = rng.gen_range(1..=5);
+        config.initial_temp = rng.gen_range(15.0..=30.0);
+        config.initial_humidity = rng.gen_range(30.0..=90.0);
+        let mut state = EcosystemStateV2::new(&config);
+        let mut day = 1;
+        let difficulty = rng.gen_range(0.6..=1.0);
+        loop {
+            let is_day = day % 2 == 0;
+            update_ecosystem_v2(&config, &mut state, is_day, difficulty);
+            if is_ecosystem_collapsed(&state) {
+                break;
+            }
+            if day >= day_cap {
+                survived += 1;
+                break;
+            }
+            day += 1;
+        }
+        total_days += day;
+        *histogram.entry(day).or_insert(0) += 1;
+    }
+    if num_runs >= 20 {
+        println!("\rProgress: [100%] {}/{} runs", num_runs, num_runs);
+    }
+    println!("V2 Monte Carlo Results ({} runs, {} day cap):", num_runs, day_cap);
+    println!("  Survived {} days: {} times ({:.1}%)", day_cap, survived, (survived as f64 / num_runs as f64) * 100.0);
+    println!("  Average days survived: {:.2}", total_days as f64 / num_runs as f64);
+    print_histogram(&histogram, num_runs, day_cap);
+}
+
+fn print_histogram(histogram: &BTreeMap<usize, usize>, num_runs: usize, day_cap: usize) {
+    println!("\nHistogram of days survived before collapse:");
+    for (days, count) in histogram {
+        let bar = "#".repeat((*count * 50 / num_runs).max(1));
+        let label = if *days == day_cap {
+            format!("{}+", days)
+        } else {
+            format!("{}", days)
+        };
+        println!("  {:>4} days: {:>4} | {}", label, count, bar);
     }
 }
