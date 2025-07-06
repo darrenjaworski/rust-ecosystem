@@ -5,6 +5,13 @@ mod v1 {
     pub mod game;
     pub mod input;
 }
+mod v2 {
+    pub mod config;
+    pub mod state;
+    pub mod simulation;
+    pub mod game;
+    pub mod input;
+}
 mod montecarlo;
 
 use v1::config::setup_game;
@@ -14,7 +21,10 @@ use montecarlo::run_montecarlo_simulations;
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() > 1 && args[1] == "montecarlo" {
+    if args.len() > 1 && args[1] == "v2" {
+        println!("Hello from v2!");
+        // v2::game::run_game_v2(); // Uncomment when ready
+    } else if args.len() > 1 && args[1] == "montecarlo" {
         let num_runs = if args.len() > 2 {
             args[2].parse::<usize>().unwrap_or(100)
         } else {
