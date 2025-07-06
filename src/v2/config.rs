@@ -2,12 +2,9 @@
 // Configuration and parameters for v2 ecosystem simulation
 
 pub struct V2Config {
-    pub num_plants: usize,
     pub num_microbes: usize,
     pub num_worms: usize,
     pub num_shrimp: usize,
-    pub soil_kg: f32,
-    pub soil_type: SoilType,
     pub water_liters: f32,
     pub rocks: usize,
     pub window_proximity: u8,
@@ -15,6 +12,7 @@ pub struct V2Config {
     pub initial_humidity: f32,
 }
 
+#[allow(dead_code)]
 pub enum SoilType {
     Porous,
     NonPorous,
@@ -23,12 +21,9 @@ pub enum SoilType {
 impl Default for V2Config {
     fn default() -> Self {
         Self {
-            num_plants: 2,
             num_microbes: 1000,
             num_worms: 5,
             num_shrimp: 2,
-            soil_kg: 1.0,
-            soil_type: SoilType::Porous,
             water_liters: 0.5,
             rocks: 2,
             window_proximity: 3,

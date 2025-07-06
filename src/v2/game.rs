@@ -12,8 +12,8 @@ pub fn run_game_v2() {
     loop {
         let is_day = day % 2 == 0;
         update_ecosystem_v2(&config, &mut state, is_day);
-        // TODO: Add CLI, win/loss, and state display for v2
-        println!("Day {}: T = {:.1}°C, H = {:.1}%", day, state.temperature, state.humidity);
+        println!("Day {}: T = {:.1}°C, H = {:.1}%, Plant: {:.2}, Microbes: {:.2}, Worms: {:.2}, Shrimp: {:.2}, O2: {:.2}, CO2: {:.2}, pH: {:.2}",
+            day, state.temperature, state.humidity, state.plant_biomass, state.microbe_pop, state.worm_pop, state.shrimp_pop, state.air_o2, state.air_co2, state.soil_ph);
         day += 1;
         if day > 30 { break; }
     }
