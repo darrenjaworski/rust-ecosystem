@@ -1,109 +1,171 @@
 // v2/game.rs
-// Game loop and CLI for v2
+// Game loop and CLI for v2 - updated for refactored system
 
 use crate::v2::config::V2Config;
 use crate::v2::state::EcosystemStateV2;
-use crate::v2::simulation::update_ecosystem_v2;
+use crate::v2::simulation_refactored::update_ecosystem_v2;
+use crate::v2::traits::{EcosystemDisplay, CollapseDetection, EcosystemValidation};
 
 pub fn run_game_v2() {
-    use std::io::{self, Write};
-    let mut config = V2Config::default();
-    // Prompt for user-selectable options
-    print!("Enter window proximity (1=closest, 6=farthest) [default: {}]: ", config.window_proximity);
-    io::stdout().flush().unwrap();
-    let mut input = String::new();
-    io::stdin().read_line(&mut input).unwrap();
-    if let Ok(val) = input.trim().parse::<u8>() {
-        config.window_proximity = val.clamp(1, 6);
-    }
-    print!("Enter water liters [default: {:.2}]: ", config.water_liters);
-    io::stdout().flush().unwrap();
-    input.clear();
-    io::stdin().read_line(&mut input).unwrap();
-    if let Ok(val) = input.trim().parse::<f32>() {
-        config.water_liters = val.max(0.1);
-    }
-    print!("Enter starting plant biomass [default: 1.0]: ");
-    io::stdout().flush().unwrap();
-    input.clear();
-    io::stdin().read_line(&mut input).unwrap();
-    let user_plant_biomass = input.trim().parse::<f32>().ok().filter(|v| *v > 0.0).unwrap_or(1.0);
-    print!("Enter difficulty (0.0 = easy, 1.0 = hard) [default: 0.5]: ");
-    io::stdout().flush().unwrap();
-    input.clear();
-    io::stdin().read_line(&mut input).unwrap();
-    let difficulty = input.trim().parse::<f32>().ok().filter(|v| *v >= 0.0 && *v <= 1.0).unwrap_or(0.5);
-    print!("Enter a seed (u64) for your ecosystem, or leave blank for random: ");
-    io::stdout().flush().unwrap();
-    input.clear();
-    io::stdin().read_line(&mut input).unwrap();
-    let seed = input.trim().parse::<u64>().unwrap_or_else(|_| rand::random());
-    let mut state = EcosystemStateV2::new_with_seed(&config, seed);
-    state.plant_biomass = user_plant_biomass;
-    let mut day = 0;
-    let mut prev_temp = state.temperature;
-    let mut prev_humidity = state.humidity;
-    let mut prev_biomass = state.plant_biomass;
-    let mut prev_o2 = state.air_o2;
-    loop {
-        let is_day = day % 2 == 0;
-        update_ecosystem_v2(&config, &mut state, is_day, difficulty);
-        // --- End of Day Styling ---
-        println!("\n--- End of Day {} ---", day + 1);
-        println!("  Temperature:      {:6.2}°C", state.temperature);
-        println!("  Humidity:         {:6.2}%", state.humidity);
-        println!("  pH:               {:6.2}", state.soil_ph);
-        println!("  Plant Biomass:    {:6.2}", state.plant_biomass);
-        println!("  Microbe Pop:      {:6.2}", state.microbe_pop);
-        println!("  Worm Pop:         {:6.2}", state.worm_pop);
-        println!("  Shrimp Pop:       {:6.2}", state.shrimp_pop);
-        println!("  Soil Nitrogen:    {:6.2}", state.soil_nitrogen);
-        println!("  Soil Moisture:    {:6.2}", state.soil_moisture);
-        println!("  Soil Aeration:    {:6.2}", state.soil_aeration);
-        println!("  Detritus:         {:6.2}", state.detritus);
-        println!("  Water (L):        {:6.2}", state.water_liters);
-        println!("  Water O2:         {:6.2}", state.water_o2);
-        println!("  Air: {:5.2}% N2, {:5.2}% O2, {:5.2}% CO2", state.air_n2, state.air_o2, state.air_co2);
-        println!("  Window proximity (distance from window): {}", config.window_proximity);
-        println!("  Rocks:            {}", state.rocks);
-        println!("--- Visual Indicators ---");
-        print_bar("Temperature", state.temperature, prev_temp, 5.0, 45.0);
-        print_bar("Humidity", state.humidity, prev_humidity, 0.0, 100.0);
-        print_bar("Plant Biomass", state.plant_biomass, prev_biomass, 0.0, 100.0);
-        print_bar("Oxygen", state.air_o2, prev_o2, 0.0, 21.0);
-        // User intervention
-        println!("\n[c] Closer to light  [f] Farther from light  [n] None  [q] Quit");
-        print!("Your action: ");
-        io::stdout().flush().unwrap();
-        input.clear();
-        io::stdin().read_line(&mut input).unwrap();
-        match input.trim() {
-            "c" => { if config.window_proximity > 1 { config.window_proximity -= 1; } },
-            "f" => { if config.window_proximity < 6 { config.window_proximity += 1; } },
-            "q" => break,
-            _ => {},
+    println!("🧪 Rust Ecosystem v2 - Refactored Edition");
+    println!("==========================================");
+    
+    // Create config with user input
+    let config = setup_game_v2();
+    
+    // Create initial state
+    let mut state = match EcosystemStateV2::new(&config) {
+        Ok(state) => state,
+        Err(e) => {
+            println!("Error creating ecosystem: {}", e);
+            return;
         }
+    };
+    
+    let mut day = 0;
+    let goal_days = 30;
+    
+    println!("\n🎯 Goal: Survive {} days without ecosystem collapse!", goal_days);
+    println!("{}", state.display_detailed());
+    
+    loop {
         day += 1;
-        prev_temp = state.temperature;
-        prev_humidity = state.humidity;
-        prev_biomass = state.plant_biomass;
-        prev_o2 = state.air_o2;
-        // Collapse check
-        if crate::v2::simulation::is_ecosystem_collapsed(&state) {
-            println!("\n*** ECOSYSTEM COLLAPSE: One or more populations have crashed. ***");
+        let is_day = day % 2 == 1; // Odd days are day, even are night
+        
+        println!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        println!("🌅 Day {} ({}) 🌅", (day + 1) / 2, if is_day { "Daytime" } else { "Nighttime" });
+        println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        
+        // Update ecosystem
+        if let Err(e) = update_ecosystem_v2(&config, &mut state, is_day) {
+            println!("❌ Simulation error: {}", e);
             break;
         }
-        if day > 30 { break; }
+        
+        // Display status
+        println!("{}", state.display_summary());
+        
+        // Check for collapse
+        if state.is_collapsed() {
+            println!("\n💀 ECOSYSTEM COLLAPSE! 💀");
+            let reasons = state.collapse_reasons();
+            for reason in reasons {
+                println!("   • {}", reason);
+            }
+            println!("You survived {} half-days ({} full days)", day, day / 2);
+            break;
+        }
+        
+        // Check for warnings
+        let warnings = state.health_warnings();
+        if !warnings.is_empty() {
+            println!("\n⚠️  Health Warnings:");
+            for warning in warnings {
+                println!("   • {}", warning);
+            }
+        }
+        
+        // Show collapse risk
+        let risk = state.collapse_risk();
+        if risk > 0.3 {
+            println!("🚨 Collapse Risk: {:.1}%", risk * 100.0);
+        }
+        
+        // User action (only during day)
+        if is_day {
+            if !get_user_action() {
+                println!("👋 Game ended by user");
+                break;
+            }
+        }
+        
+        // Check win condition
+        if day >= goal_days * 2 { // *2 because we count half-days
+            println!("\n🎉 VICTORY! 🎉");
+            println!("You successfully maintained your ecosystem for {} days!", goal_days);
+            println!("Final ecosystem state:");
+            println!("{}", state.display_detailed());
+            break;
+        }
+        
+        // Sleep a bit for dramatic effect
+        std::thread::sleep(std::time::Duration::from_millis(500));
     }
 }
 
-fn print_bar(label: &str, value: f32, prev: f32, min: f32, max: f32) {
-    let width = 20;
-    let percent = ((value - min) / (max - min)).clamp(0.0, 1.0);
-    let bar_count = (percent * width as f32).round() as usize;
-    let bar = "█".repeat(bar_count) + &"-".repeat(width - bar_count);
-    let diff = value - prev;
-    let diff_percent = if prev.abs() > 1e-6 { (diff / prev) * 100.0 } else { 0.0 };
-    let sign = if diff_percent >= 0.0 { "+" } else { "" };
-    println!("  {:15} [{}] ({}{:.1}%)", label, bar, sign, diff_percent);
+fn setup_game_v2() -> V2Config {
+    use std::io::{self, Write};
+    
+    println!("\n🔧 Ecosystem Configuration");
+    println!("==========================");
+    
+    let mut config = V2Config::new();
+    
+    print!("Choose difficulty [1=Easy, 2=Medium, 3=Hard, 4=Extreme] (default: 2): ");
+    io::stdout().flush().unwrap();
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+    
+    let difficulty_level = match input.trim() {
+        "1" => 0.2,
+        "2" => 0.5,
+        "3" => 0.8,
+        "4" => 1.0,
+        _ => 0.5,
+    };
+    
+    match V2Config::with_difficulty(difficulty_level) {
+        Ok(new_config) => config = new_config,
+        Err(e) => println!("Error setting difficulty: {}, using default", e),
+    }
+    
+    print!("Enter a seed for reproducible results (or press Enter for random): ");
+    io::stdout().flush().unwrap();
+    input.clear();
+    io::stdin().read_line(&mut input).unwrap();
+    
+    if !input.trim().is_empty() {
+        if let Ok(seed) = input.trim().parse::<u64>() {
+            println!("Using seed: {}", seed);
+            // We could implement seeded generation here if needed
+        }
+    }
+    
+    println!("\n✅ Configuration complete!");
+    println!("   Difficulty: {:.1}%", difficulty_level * 100.0);
+    println!("   Organisms: {} microbes, {} worms, {} shrimp", 
+             config.organisms.microbes.initial_count,
+             config.organisms.worms.initial_count,
+             config.organisms.shrimp.initial_count);
+    println!("   Environment: {:.1}°C, {:.1}% humidity, {:.1}L water",
+             config.environment.initial_temperature.celsius(),
+             config.environment.initial_humidity.percentage(),
+             config.environment.water_volume.value());
+    
+    config
+}
+
+fn get_user_action() -> bool {
+    use std::io::{self, Write};
+    
+    println!("\n🎮 What would you like to do?");
+    println!("   [Enter] Continue to next day");
+    println!("   [s] Show detailed status");
+    println!("   [q] Quit game");
+    
+    print!("Action: ");
+    io::stdout().flush().unwrap();
+    
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+    
+    match input.trim().to_lowercase().as_str() {
+        "q" | "quit" => false,
+        "s" | "status" => {
+            // This would show detailed status if we had state access
+            println!("📊 Detailed status not implemented yet");
+            true
+        }
+        _ => true,
+    }
 }

@@ -38,7 +38,7 @@ fn photosynthesis(
 ) -> EcosystemResult<()> {
     let light_level = state.light_level();
     let humidity_factor = humidity_efficiency(state.humidity);
-    let co2_factor = (state.air_co2.percentage() / 0.04).min(2.0); // CO2 can enhance photosynthesis
+    let co2_factor = (state.air_co2.value() / 0.04).min(2.0); // CO2 can enhance photosynthesis
     
     let photosynthesis_rate = params.photosynthesis.base_rate 
         * state.plant_biomass.value()

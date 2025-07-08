@@ -42,26 +42,39 @@ pub fn update_all_organisms(
 
 /// Calculate environmental penalties and apply them to populations
 pub fn apply_environmental_penalties(state: &mut EcosystemStateV2) -> EcosystemResult<()> {
+    use crate::v2::types::*;
+    
     // pH penalties
     let ph_penalty = ph_penalty_factor(state.soil_ph);
     if ph_penalty > 0.0 {
-        state.plant_biomass = (state.plant_biomass.value() * (1.0 - 0.10 * ph_penalty)).max(0.0);
-        state.microbe_pop = (state.microbe_pop.value() * (1.0 - 0.15 * ph_penalty)).max(0.0);
-        state.shrimp_pop = (state.shrimp_pop.value() * (1.0 - 0.20 * ph_penalty)).max(0.0);
+        let new_plant_biomass = (state.plant_biomass.value() * (1.0 - 0.10 * ph_penalty)).max(0.0);
+        state.plant_biomass = Biomass::new(new_plant_biomass)?;
+        
+        let new_microbe_pop = (state.microbe_pop.value() * (1.0 - 0.15 * ph_penalty)).max(0.01);
+        state.microbe_pop = Population::new(new_microbe_pop)?;
+        
+        let new_shrimp_pop = (state.shrimp_pop.value() * (1.0 - 0.20 * ph_penalty)).max(0.01);
+        state.shrimp_pop = Population::new(new_shrimp_pop)?;
     }
 
     // Air oxygen penalties
     let oxygen_penalty = oxygen_penalty_factor(state.air_o2);
     if oxygen_penalty > 0.0 {
-        state.plant_biomass = (state.plant_biomass.value() * (1.0 - 0.10 * oxygen_penalty)).max(0.0);
-        state.microbe_pop = (state.microbe_pop.value() * (1.0 - 0.15 * oxygen_penalty)).max(0.0);
-        state.worm_pop = (state.worm_pop.value() * (1.0 - 0.20 * oxygen_penalty)).max(0.0);
+        let new_plant_biomass = (state.plant_biomass.value() * (1.0 - 0.10 * oxygen_penalty)).max(0.0);
+        state.plant_biomass = Biomass::new(new_plant_biomass)?;
+        
+        let new_microbe_pop = (state.microbe_pop.value() * (1.0 - 0.15 * oxygen_penalty)).max(0.01);
+        state.microbe_pop = Population::new(new_microbe_pop)?;
+        
+        let new_worm_pop = (state.worm_pop.value() * (1.0 - 0.20 * oxygen_penalty)).max(0.01);
+        state.worm_pop = Population::new(new_worm_pop)?;
     }
 
     // Water oxygen penalties for shrimp
     let water_oxygen_penalty = water_oxygen_penalty_factor(state.water_o2);
     if water_oxygen_penalty > 0.0 {
-        state.shrimp_pop = (state.shrimp_pop.value() * (1.0 - 0.20 * water_oxygen_penalty)).max(0.0);
+        let new_shrimp_pop = (state.shrimp_pop.value() * (1.0 - 0.20 * water_oxygen_penalty)).max(0.01);
+        state.shrimp_pop = Population::new(new_shrimp_pop)?;
     }
 
     Ok(())

@@ -44,7 +44,8 @@ fn nitrogen_fixation(
     
     // Consume some atmospheric nitrogen
     let n2_consumed = nitrogen_fixed * 0.1; // Small amount from atmosphere
-    state.air_n2 = (state.air_n2.value() - n2_consumed).max(0.0);
+    let new_air_n2 = (state.air_n2.value() - n2_consumed).max(0.0);
+    state.air_n2 = crate::v2::types::Nitrogen::new(new_air_n2)?;
     
     Ok(())
 }

@@ -13,9 +13,11 @@ pub mod state;
 // Organism modules
 pub mod organisms;
 
-// Simulation engine
-pub mod simulation;
+// Simulation engine (refactored)
 pub mod simulation_refactored;
+
+// Monte Carlo analysis
+pub mod montecarlo;
 
 // Game interface
 pub mod game;
