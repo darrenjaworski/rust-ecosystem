@@ -5,13 +5,9 @@ mod v1 {
     pub mod game;
     pub mod input;
 }
-mod v2 {
-    pub mod config;
-    pub mod state;
-    pub mod simulation;
-    pub mod game;
-    pub mod input;
-}
+
+// Use the new modular v2 structure
+mod v2;
 mod montecarlo;
 
 use v1::config::setup_game;
